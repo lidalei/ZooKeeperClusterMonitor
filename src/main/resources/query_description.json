@@ -1,0 +1,76 @@
+{
+	"id": 0,
+	"name": "query test",
+	"subqueryArray": [
+		{
+			"name": "subquery 1",
+			"operatorArray": [
+				{
+					"name": "Op1",
+					"type": "filter",
+					"inStreamNames": [
+						"stream1"
+					],
+					"outStreamNames": [
+						"stream2"
+					],
+					"config": [
+						{
+							"configKey": "FILTER_GLOBAL_CONFIG",
+							"configValue": "duration>10"
+						}
+					]
+				}
+			],
+			"streamArray": [
+				{
+					"name": "stream1",
+					"type": "sourcestream",
+					"schema": "timestamp:TIMESTAMP_FIELD;",
+					"config": null
+				},
+				{
+					"name": "stream2",
+					"type": "outgoingstream",
+					"schema": "timestamp:TIMESTAMP_FIELD;",
+					"config": null
+				}
+			]
+		},
+		{
+			"name": "subquery 2",
+			"operatorArray": [
+				{
+					"name": "Op2",
+					"type": "map",
+					"inStreamNames": [
+						"stream2"
+					],
+					"outStreamNames": [
+						"stream3"
+					],
+					"config": [
+						{
+							"configKey": "FILTER_GLOBAL_CONFIG",
+							"configValue": "duration>10"
+						}
+					]
+				}
+			],
+			"streamArray": [
+				{
+					"name": "stream1",
+					"type": "sourcestream",
+					"schema": "timestamp:TIMESTAMP_FIELD;",
+					"config": null
+				},
+				{
+					"name": "stream2",
+					"type": "outgoingstream",
+					"schema": "timestamp:TIMESTAMP_FIELD;",
+					"config": null
+				}
+			]
+		}
+	]
+}
