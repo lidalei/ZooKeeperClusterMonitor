@@ -16,3 +16,9 @@ hs_err_pid*
 
 # ignore target
 target/
+
+*.out
+
+*.pid
+
+*.1
