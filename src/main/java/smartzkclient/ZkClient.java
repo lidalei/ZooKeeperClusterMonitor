@@ -28,7 +28,6 @@ public class ZkClient {
     // declare zookeeper instance to access ZooKeeper ensemble
     final CountDownLatch connectedSignal = new CountDownLatch(1);
 
-
     /*
     The function to connect the a specific zookeeper server.
     If connect successfully, return the zookeeper object.
@@ -73,15 +72,31 @@ public class ZkClient {
         }
     }
 
-
     /*
-     Method to create znode in zookeeper ensemble
-     If created successfully, return the true path of the created znode,
-      Else, return null.
-      */
-    private String createZnode(String path, byte[] data){
+    Method to create znode in zookeeper ensemble. Default, CreateMode.PERSISTENT.
+    If created successfully, return the true path of the created znode,
+    Else, return null.
+    */
+    public String createZnode(String path, byte[] data){
+        return createZnode(path, data, CreateMode.PERSISTENT);
+    }
+
+    /**
+     * Method to create znode in zookeeper ensemble
+     * If created successfully, return the true path of the created znode, else if exists, set the data only,
+     * Else, return null.
+     */
+    public String createZnode(String path, byte[] data, CreateMode createMode){
+        if(znodeExists(path) != null) {
+            if(!setData(path, data)) {
+                System.out.println("Znode " + path + " already exists. But update data error.");
+                return null;
+            }
+            System.out.println("Znode " + path + " already exists. Update the data it stores successfully!");
+            return path;
+        }
         try{
-            return zk.create(path, data, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            return zk.create(path, data, ZooDefs.Ids.OPEN_ACL_UNSAFE, createMode);
         }
         catch(KeeperException e) {
             e.printStackTrace();
@@ -92,7 +107,24 @@ public class ZkClient {
         return null;
     }
 
-    private Stat znode_exists(String path) {
+    /**
+     * Method to update the data in a znode. Similar to getData but without watcher.
+     */
+    private boolean setData(String path, byte[] data) {
+        try{
+            zk.setData(path, data, zk.exists(path, false).getVersion());
+            return true;
+        }
+        catch(KeeperException e) {
+            e.printStackTrace();
+        }
+        catch(InterruptedException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private Stat znodeExists(String path) {
         try{
             return zk.exists(path, false);
         }
@@ -105,10 +137,13 @@ public class ZkClient {
         return null;
     }
 
-    private byte[] getDataOrElse(String path, Watcher watcher, Stat state, byte[] defaultValue) {
-        Stat stat = znode_exists(path);
+    public byte[] getData(String path, Watcher watcher, Stat state) {
+        return getDataOrElse(path, watcher, state, null);
+    }
 
-        // error or no such znode exists
+    private byte[] getDataOrElse(String path, Watcher watcher, Stat state, byte[] defaultValue) {
+        Stat stat = znodeExists(path);
+
         if(stat != null) {
             try {
                 return zk.getData(path, watcher, state);
@@ -121,21 +156,109 @@ public class ZkClient {
             }
             return defaultValue;
         }
-        else {
+        else {// error or no such znode exists
             System.out.println("Node does not exists or exceptions occurred while getting data. Refer the output for more information.");
         }
         return defaultValue;
     }
 
 
-    /*
+    public byte[] getData(String path, boolean watcher, Stat stat) {
+        try{
+            return zk.getData(path, watcher, stat);
+        }
+        catch(KeeperException e) {
+            e.printStackTrace();
+        }
+        catch(InterruptedException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
     Register an instance manager.
     @param instanceManagerId, id of an instance manager.
-    @param subqueryName, the name of subqueries executed in this instance manager.
+    @param subqueries, the name of subqueries executed in this instance manager.
      */
     public String registerInstanceManager(String rootPath, String instanceManagerId, String subqueries) {
         return createZnode(rootPath + "/" + instanceManagerId, subqueries.getBytes());
     }
+
+
+    /**
+     * get direct children and set a watch on the event of children change
+     * @param path
+     * @param watch
+     * @return
+     */
+    public List<String> getChildren(String path, Watcher watch, Stat state) {
+
+        if(znodeExists(path) == null) {
+            return null;
+        }
+
+        try {
+            return zk.getChildren(path, watch);
+        }
+        catch(InterruptedException e) {
+            e.printStackTrace();
+        }
+        catch(KeeperException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    /**
+     * List children without setting a watch
+     * @param path - String, parent path to all returned children
+     * @param isRecursive - boolean, true, list grandchildren, etc.
+     * @return children: List<String>
+     */
+
+    public List<String> getChildren(String path, boolean isRecursive) {
+        if(znodeExists(path) == null) {
+            return null;
+        }
+
+        if(!isRecursive) { // not recursive, only return direct children
+            try {
+                return zk.getChildren(path, false);
+            }
+            catch(InterruptedException e) {
+                e.printStackTrace();
+            }
+            catch(KeeperException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+        else {
+            try {
+                List<String> directChildren =  zk.getChildren(path, false);
+                // children contain directChildren
+                List<String> children = directChildren;
+                for(String directChild : directChildren) {
+                    List<String> grandChildren = zk.getChildren(directChild, false);
+                    if(grandChildren != null)
+                        children.addAll(grandChildren);
+                }
+                return children;
+            }
+            catch(InterruptedException e) {
+                e.printStackTrace();
+            }
+            catch(KeeperException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+    }
+
 
     /*
     List all instance manager.
@@ -143,7 +266,7 @@ public class ZkClient {
      */
 
     public List<String> listAllInstanceManagers(String rootPath) {
-        if(znode_exists(rootPath) == null) {
+        if(znodeExists(rootPath) == null) {
             return null;
         }
 
@@ -344,7 +467,7 @@ public class ZkClient {
         String name = subqueryDep.getString("name");
 
         String queryDepZnodePath = null;
-        if(znode_exists(rootDepZnodePath + "/" + name) == null) {
+        if(znodeExists(rootDepZnodePath + "/" + name) == null) {
             queryDepZnodePath = createZnode(rootDepZnodePath + "/" + name, (name + " Deployment").getBytes());
         }
         else {
