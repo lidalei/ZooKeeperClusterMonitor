@@ -17,7 +17,7 @@ public class TestZkClient {
 
         ZkClient zkCli = new ZkClient();
 
-        if(zkCli.connect("localhost") == null) {
+        if(!zkCli.connect("localhost")) {
             System.out.println("Connection error!");
             return;
         }

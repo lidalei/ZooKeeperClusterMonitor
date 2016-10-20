@@ -6,15 +6,13 @@ import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.data.Stat;
 
 public class ZKGetData {
 
     private static ZooKeeper zk;
     private static ZookeeperConnection conn;
-    public static Stat znode_exists(String path) throws
-            KeeperException,InterruptedException {
+    public static Stat znode_exists(String path) throws KeeperException,InterruptedException {
         return zk.exists(path,true);
     }
 
@@ -39,14 +37,13 @@ public class ZKGetData {
                                     break;
                             }
 
-                        } else {
+                        }
+                        else {
                             String path = "/MyFirstZnode";
 
                             try {
-                                byte[] bn = zk.getData(path,
-                                        false, null);
-                                String data = new String(bn,
-                                        "UTF-8");
+                                byte[] bn = zk.getData(path, false, null);
+                                String data = new String(bn, "UTF-8");
                                 System.out.println(data);
                                 connectedSignal.countDown();
 

@@ -15,8 +15,10 @@ public class Monitor implements ApplicationResources {
     private String zkHost = null;
     private ZkClient zkCli = null;
 
-//    final String instanceManager = "instanceManagerRoot";
-//    final String orchestrator = "orchestratorRoot";
+    // when a child event occurs, compare the changed children with the "current" ones
+    // to identify the specific change according to the comparison and the status of instanceManagers,
+    // finally update the current instanceManagers and the status.
+    private List<String> activeInstanceManagers = null;
 
     public Monitor(String zkHost, ZkClient zkCli){
         this.zkHost = zkHost;
@@ -36,8 +38,7 @@ public class Monitor implements ApplicationResources {
      */
 
     private boolean initialize() {
-        zkCli.connect(zkHost);
-        if(zkCli == null) {
+        if(!zkCli.connect(zkHost)) {
             System.out.println("Initialization error! Cannot connect to " + zkHost + " Zookeeper error.");
             return false;
         }
@@ -64,15 +65,15 @@ public class Monitor implements ApplicationResources {
 
 
         // create instanceManager and Orchestrator root znode
-        String instanceManagerRootPath = zkCli.createZnode(appRooPath + "/" + instanceManager, instanceManager.getBytes());
+        String instanceManagerRootPath = zkCli.createZnode(appRooPath + "/" + instanceManagerRootZnode, instanceManagerRootZnode.getBytes());
         if(instanceManagerRootPath  == null) {
-            System.out.println("Create " + instanceManager + " error");
+            System.out.println("Create " + instanceManagerRootZnode + " error");
             return false;
         }
 
-        String orchestratorRootPath = zkCli.createZnode(appRooPath + "/" + orchestrator, orchestrator.getBytes());
+        String orchestratorRootPath = zkCli.createZnode(appRooPath + "/" + orchestratorRootZnode, orchestratorRootZnode.getBytes());
         if(orchestratorRootPath  == null) {
-            System.out.println("Create " + orchestrator + " error");
+            System.out.println("Create " + orchestratorRootZnode + " error");
             return false;
         }
 
@@ -84,28 +85,30 @@ public class Monitor implements ApplicationResources {
     public boolean setWatchOnInstanceManagers(String appName) {
 
         //TODO
-        final String instanceManagerRootPath = "/" + appName + "/" + instanceManager;
+        final String instanceManagerRootPath = "/" + appName + "/" + instanceManagerRootZnode;
 
 
-        Watcher watcher = new Watcher() {
+        Watcher dataWatch = new Watcher() {
             public void process(WatchedEvent we) {
+                // TODO
                 System.out.println("InstanceManager data event - state: " + we.getState() + ", type: " + we.getType());
                 // re-watch the znode
                 zkCli.getData(instanceManagerRootPath, this, null);
             }
         };
 
-        Watcher childWatcher = new Watcher() {
+        Watcher childWatch = new Watcher() {
             public void process(WatchedEvent we) {
+                // TODO
                 System.out.println("InstanceManager children event - state: " + we.getState() + ", type: "+ we.getType());
                 // re-watch the children change event
                 zkCli.getChildren(instanceManagerRootPath, this, null);
             }
         };
 
-        byte[] data = zkCli.getData(instanceManagerRootPath, watcher, null);
+        byte[] data = zkCli.getData(instanceManagerRootPath, dataWatch, null);
 
-        List<String> children = zkCli.getChildren(instanceManagerRootPath, childWatcher, null);
+        List<String> children = zkCli.getChildren(instanceManagerRootPath, childWatch, null);
 
         if(data == null) {
             System.out.println("Get " + instanceManagerRootPath + " data Error!");
@@ -117,8 +120,8 @@ public class Monitor implements ApplicationResources {
         }
         else {
                 try{
-                    System.out.println(instanceManager + " data is " + new String(data, "UTF-8"));
-                    System.out.println(instanceManager + " children are " + children.toString());
+                    System.out.println(instanceManagerRootZnode + " data is " + new String(data, "UTF-8"));
+                    System.out.println(instanceManagerRootZnode + " children are " + children.toString());
                 }
                 catch(UnsupportedEncodingException e) {
                     e.printStackTrace();
@@ -132,13 +135,13 @@ public class Monitor implements ApplicationResources {
 
 
     public boolean setWatchOnOrchestrator(String appName) {
-
-        //TODO
-        final String orchestratorRootPath = "/" + appName + "/" + orchestrator;
-
+        final String orchestratorRootPath = "/" + appName + "/" + orchestratorRootZnode;
 
         Watcher dataWatcher = new Watcher() {
             public void process(WatchedEvent we) {
+                // TODO
+
+
                 System.out.println("Orchestrator event - state: " + we.getState() + ", type: " + we.getType());
                 // re-watch the znode
                 zkCli.getData(orchestratorRootPath, this, null);
@@ -148,6 +151,7 @@ public class Monitor implements ApplicationResources {
 
         Watcher childWatcher = new Watcher() {
             public void process(WatchedEvent we) {
+                // TODO
                 System.out.println("Orchestrator children event - state: " + we.getState() + ", type: "+ we.getType());
                 // re-watch the children change event
                 zkCli.getChildren(orchestratorRootPath, this, null);
@@ -168,8 +172,8 @@ public class Monitor implements ApplicationResources {
         }
         else {
             try{
-                System.out.println(orchestrator + " data is " + new String(data, "UTF-8"));
-                System.out.println(orchestrator + " children are " + children.toString());
+                System.out.println(orchestratorRootZnode + " data is " + new String(data, "UTF-8"));
+                System.out.println(orchestratorRootZnode + " children are " + children.toString());
             }
             catch(UnsupportedEncodingException e) {
                 e.printStackTrace();

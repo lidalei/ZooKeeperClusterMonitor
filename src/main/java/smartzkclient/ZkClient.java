@@ -30,10 +30,10 @@ public class ZkClient {
 
     /*
     The function to connect the a specific zookeeper server.
-    If connect successfully, return the zookeeper object.
-    Else throw exception.
+    If connect successfully, return true.
+    Else return false.
      */
-    public ZooKeeper connect(String host) {
+    public boolean connect(String host) {
 
         // default as localhost
         if(host == "" || host == null) host = "localhost";
@@ -48,7 +48,7 @@ public class ZkClient {
             });
 
             connectedSignal.await();
-            return zk;
+            return true;
         }
         catch(IOException e) {
             e.printStackTrace();
@@ -57,7 +57,7 @@ public class ZkClient {
             e.printStackTrace();
         }
 
-        return null;
+        return false;
     }
 
     // Method to disconnect from zookeeper server
@@ -105,6 +105,15 @@ public class ZkClient {
             e.printStackTrace();
         }
         return null;
+    }
+
+
+    /**
+     * get session id
+     */
+
+    public Long getSessionId() {
+        return zk.getSessionId();
     }
 
     /**
