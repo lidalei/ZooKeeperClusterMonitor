@@ -22,8 +22,8 @@ import java.util.List;
 
 public class ZkClient {
 
-    // create static instance for zookeeper class.
-    private static ZooKeeper zk = null;
+    // create an instance for zookeeper class.
+    private ZooKeeper zk = null;
 
     // declare zookeeper instance to access ZooKeeper ensemble
     final CountDownLatch connectedSignal = new CountDownLatch(1);
@@ -119,7 +119,7 @@ public class ZkClient {
     /**
      * Method to update the data in a znode. Similar to getData but without watcher.
      */
-    private boolean setData(String path, byte[] data) {
+    public boolean setData(String path, byte[] data) {
         try{
             zk.setData(path, data, zk.exists(path, false).getVersion());
             return true;

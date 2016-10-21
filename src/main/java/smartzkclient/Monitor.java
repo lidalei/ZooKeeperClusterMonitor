@@ -19,6 +19,7 @@ public class Monitor implements ApplicationResources {
     // to identify the specific change according to the comparison and the status of instanceManagers,
     // finally update the current instanceManagers and the status.
     private List<String> activeInstanceManagers = null;
+    private List<String> activeOrchestrators = null;
 
     public Monitor(String zkHost, ZkClient zkCli){
         this.zkHost = zkHost;
@@ -48,10 +49,9 @@ public class Monitor implements ApplicationResources {
     /**
      * start the app
      * create the Orchestrator and InstanceManager parent znodes
-     * @param appName - String, the name of an application
      * @return boolean
      */
-    public boolean startApp(String appName) {
+    public boolean startApp() {
         // initialize
         if(initialize() == false) {
             return false;
@@ -62,7 +62,6 @@ public class Monitor implements ApplicationResources {
             System.out.println("Start " + appName + " error! Create " + appName + " root path error.");
             return false;
         }
-
 
         // create instanceManager and Orchestrator root znode
         String instanceManagerRootPath = zkCli.createZnode(appRooPath + "/" + instanceManagerRootZnode, instanceManagerRootZnode.getBytes());
@@ -78,19 +77,30 @@ public class Monitor implements ApplicationResources {
         }
 
 
+        // create instanceManager and Orchestrator root znode shadows
+        String instanceManagerRootShadowPath = zkCli.createZnode(appRooPath + "/" + instanceManagerRootShadowZnode, instanceManagerRootShadowZnode.getBytes());
+        if(instanceManagerRootShadowPath  == null) {
+            System.out.println("Create " + instanceManagerRootShadowZnode + " error");
+            return false;
+        }
+
+        String orchestratorRootShadowPath = zkCli.createZnode(appRooPath + "/" + orchestratorRootShadowZnode, orchestratorRootShadowZnode.getBytes());
+        if(orchestratorRootShadowPath  == null) {
+            System.out.println("Create " + orchestratorRootShadowZnode + " error");
+            return false;
+        }
+
         System.out.println("Start " + appName + " successfully!");
         return true;
     }
 
-    public boolean setWatchOnInstanceManagers(String appName) {
+    public boolean setWatchOnInstanceManagers() {
 
-        //TODO
         final String instanceManagerRootPath = "/" + appName + "/" + instanceManagerRootZnode;
 
 
         Watcher dataWatch = new Watcher() {
             public void process(WatchedEvent we) {
-                // TODO
                 System.out.println("InstanceManager data event - state: " + we.getState() + ", type: " + we.getType());
                 // re-watch the znode
                 zkCli.getData(instanceManagerRootPath, this, null);
@@ -99,10 +109,46 @@ public class Monitor implements ApplicationResources {
 
         Watcher childWatch = new Watcher() {
             public void process(WatchedEvent we) {
-                // TODO
                 System.out.println("InstanceManager children event - state: " + we.getState() + ", type: "+ we.getType());
-                // re-watch the children change event
-                zkCli.getChildren(instanceManagerRootPath, this, null);
+                // get the updated InstanceManagers and re-watch the children change event
+                List<String> updatedInstanceManagers = zkCli.getChildren(instanceManagerRootPath, this, null);
+                // An event occurs when a new instanceManager is created or an instanceManager is failed or shut down,
+                // which corresponds to a new child and a deleted child, respectively.
+                // Compare updated children with activeInstanceManagers just after last event occurred
+                // diff = updatedInstanceManagers - activeInstanceManagers
+                if(updatedInstanceManagers.size() > activeInstanceManagers.size()) { // a new instance is created
+                    for(String im : updatedInstanceManagers) {
+                        boolean flag = true;
+                        for(String activeIm: activeInstanceManagers) {
+                            if(activeIm.equals(im)) {
+                                flag = false;
+                                break;
+                            }
+                        }
+                        if(flag) { // the instanceManager is newly created
+                            System.out.println("A new instanceManager was created: " + im);
+                        }
+                    }
+                }
+                else { // an instanceManager is shutdown or failed
+                    //TODO: distinguish the status of shutdown and fail
+                    for(String activeIm : activeInstanceManagers) {
+                        boolean flag = false;
+                        for(String im: updatedInstanceManagers) {
+                            if(im.equals(activeIm)) {
+                                flag = true;
+                                break;
+                            }
+                        }
+                        if(!flag) { // the instanceManager is shutdown or failed
+                            System.out.println("An instanceManager was shutdown or failed: " + activeIm);
+                        }
+                    }
+                }
+
+                activeInstanceManagers = updatedInstanceManagers;
+                updatedInstanceManagers = null;
+
             }
         };
 
@@ -122,6 +168,9 @@ public class Monitor implements ApplicationResources {
                 try{
                     System.out.println(instanceManagerRootZnode + " data is " + new String(data, "UTF-8"));
                     System.out.println(instanceManagerRootZnode + " children are " + children.toString());
+
+                    // initialize activeInstanceManagers with the existing children when starting the Monitor
+                    activeInstanceManagers = children;
                 }
                 catch(UnsupportedEncodingException e) {
                     e.printStackTrace();
@@ -134,14 +183,11 @@ public class Monitor implements ApplicationResources {
     }
 
 
-    public boolean setWatchOnOrchestrator(String appName) {
+    public boolean setWatchOnOrchestrator() {
         final String orchestratorRootPath = "/" + appName + "/" + orchestratorRootZnode;
 
         Watcher dataWatcher = new Watcher() {
             public void process(WatchedEvent we) {
-                // TODO
-
-
                 System.out.println("Orchestrator event - state: " + we.getState() + ", type: " + we.getType());
                 // re-watch the znode
                 zkCli.getData(orchestratorRootPath, this, null);
@@ -174,6 +220,9 @@ public class Monitor implements ApplicationResources {
             try{
                 System.out.println(orchestratorRootZnode + " data is " + new String(data, "UTF-8"));
                 System.out.println(orchestratorRootZnode + " children are " + children.toString());
+
+                // initialize activeOrchestrators with the existing children when starting the Monitor
+                activeOrchestrators = children;
             }
             catch(UnsupportedEncodingException e) {
                 e.printStackTrace();

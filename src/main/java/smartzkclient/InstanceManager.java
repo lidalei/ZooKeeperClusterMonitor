@@ -13,6 +13,9 @@ public class InstanceManager implements ApplicationResources {
     private String zkHost = null;
     private String instanceManagerId = null;
 
+    private String instanceManagerPath = null;
+    private String instanceManagerShadowPath = null;
+
     public InstanceManager(String zkHost, String instanceManagerId) {
         this.zkHost = zkHost;
         this.instanceManagerId = instanceManagerId;
@@ -49,7 +52,7 @@ public class InstanceManager implements ApplicationResources {
         }
 
         // create an EPHEMERAL znode
-        String instanceManagerPath = zkCli.createZnode("/" + instanceManagerRootZnode + "/" + instanceManagerId,
+        instanceManagerPath = zkCli.createZnode("/" + appName + "/" + instanceManagerRootZnode + "/" + instanceManagerId,
                 instanceManagerId.getBytes(), CreateMode.EPHEMERAL);
 
         if(instanceManagerPath == null) {
@@ -57,8 +60,13 @@ public class InstanceManager implements ApplicationResources {
             return false;
         }
 
-        // set the flag of the corresponding associative znode
-        // TODO
+        // create a shadow persistent znode and set the flag of the corresponding associative znode
+        instanceManagerShadowPath = zkCli.createZnode("/" + appName + "/" + instanceManagerRootShadowZnode + "/" + instanceManagerId,
+                INSTANCE_MANAGER_STARTING.getBytes(), CreateMode.PERSISTENT);
+        if(instanceManagerShadowPath == null) {
+            System.out.println("Start the instanceManager shadow error.");
+            return false;
+        }
 
         return true;
     }
@@ -71,7 +79,10 @@ public class InstanceManager implements ApplicationResources {
     public boolean shutDown() {
 
         // set the flag of the corresponding associative znode
-        // TODO
+        if(!zkCli.setData(instanceManagerShadowPath, INSTANCE_MANAGER_SHUTDOWN.getBytes())) {
+            System.out.println("InstanceManager " + instanceManagerId + " shutdown error. Reason: fail to set the flag.");
+            return false;
+        }
 
         // close connection
         if(!zkCli.closeConnection()) {
