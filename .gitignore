@@ -22,3 +22,6 @@ target/
 *.pid
 
 *.1
+
+# ignore zookeeper
+lib/
