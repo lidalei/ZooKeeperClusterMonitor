@@ -15,6 +15,9 @@ public class Monitor implements ApplicationResources {
     private String zkHost = null;
     private ZkClient zkCli = null;
 
+    private String instanceManagerRootPath = null;
+    private String instanceManagerRootShadowPath = null;
+
     // when a child event occurs, compare the changed children with the "current" ones
     // to identify the specific change according to the comparison and the status of instanceManagers,
     // finally update the current instanceManagers and the status.
@@ -64,7 +67,7 @@ public class Monitor implements ApplicationResources {
         }
 
         // create instanceManager and Orchestrator root znode
-        String instanceManagerRootPath = zkCli.createZnode(appRooPath + "/" + instanceManagerRootZnode, instanceManagerRootZnode.getBytes());
+        instanceManagerRootPath = zkCli.createZnode(appRooPath + "/" + instanceManagerRootZnode, instanceManagerRootZnode.getBytes());
         if(instanceManagerRootPath  == null) {
             System.out.println("Create " + instanceManagerRootZnode + " error");
             return false;
@@ -78,7 +81,7 @@ public class Monitor implements ApplicationResources {
 
 
         // create instanceManager and Orchestrator root znode shadows
-        String instanceManagerRootShadowPath = zkCli.createZnode(appRooPath + "/" + instanceManagerRootShadowZnode, instanceManagerRootShadowZnode.getBytes());
+        instanceManagerRootShadowPath = zkCli.createZnode(appRooPath + "/" + instanceManagerRootShadowZnode, instanceManagerRootShadowZnode.getBytes());
         if(instanceManagerRootShadowPath  == null) {
             System.out.println("Create " + instanceManagerRootShadowZnode + " error");
             return false;
@@ -118,14 +121,14 @@ public class Monitor implements ApplicationResources {
                 // diff = updatedInstanceManagers - activeInstanceManagers
                 if(updatedInstanceManagers.size() > activeInstanceManagers.size()) { // a new instance is created
                     for(String im : updatedInstanceManagers) {
-                        boolean flag = true;
+                        boolean isNew = true;
                         for(String activeIm: activeInstanceManagers) {
                             if(activeIm.equals(im)) {
-                                flag = false;
+                                isNew = false;
                                 break;
                             }
                         }
-                        if(flag) { // the instanceManager is newly created
+                        if(isNew) { // the instanceManager is newly created
                             System.out.println("A new instanceManager was created: " + im);
                         }
                     }
@@ -133,15 +136,32 @@ public class Monitor implements ApplicationResources {
                 else { // an instanceManager is shutdown or failed
                     //TODO: distinguish the status of shutdown and fail
                     for(String activeIm : activeInstanceManagers) {
-                        boolean flag = false;
+                        boolean isAlive = false;
                         for(String im: updatedInstanceManagers) {
                             if(im.equals(activeIm)) {
-                                flag = true;
+                                isAlive = true;
                                 break;
                             }
                         }
-                        if(!flag) { // the instanceManager is shutdown or failed
-                            System.out.println("An instanceManager was shutdown or failed: " + activeIm);
+                        if(!isAlive) { // the instanceManager is shutdown or failed
+                            // check the status of the instanceManger znode shadow
+                            byte[] status = zkCli.getData(instanceManagerRootShadowPath + "/" + activeIm, false, null);
+                            if(status == null) {
+                                System.out.println("Fail to the get the status of instanceManager, id: " + activeIm);
+                            }
+                            else {
+                                try{
+                                    String shutdownOrFail = new String(status, "UTF-8");
+                                    if(!shutdownOrFail.equals(INSTANCE_MANAGER_SHUTDOWN)) {
+                                        shutdownOrFail = INSTANCE_MANAGER_FAIL;
+                                    }
+                                    System.out.println("The instanceManager, id: " + activeIm + " " + shutdownOrFail);
+                                }
+                                catch(UnsupportedEncodingException e) {
+                                    e.printStackTrace();
+                                    System.out.println("Convert the status of instanceManager, id: " + activeIm + " unsuccessfully!");
+                                }
+                            }
                         }
                     }
                 }

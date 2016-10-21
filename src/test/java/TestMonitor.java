@@ -21,12 +21,35 @@ public class TestMonitor {
         InstanceManager instanceManager1 = new InstanceManager(zkHost, "im1");
         instanceManager1.start();
 
+        try{
+            Thread.sleep(1000);
+        }
+        catch(InterruptedException e) {
+            e.printStackTrace();
+        }
+
         InstanceManager instanceManager2 = new InstanceManager(zkHost, "im2");
         instanceManager2.start();
 
-        instanceManager1.shutDown();
+        try{
+            Thread.sleep(1000);
+        }
+        catch(InterruptedException e) {
+            e.printStackTrace();
+        }
 
+        instanceManager1.fail();
+
+        try{
+            Thread.sleep(1000);
+        }
+        catch(InterruptedException e) {
+            e.printStackTrace();
+        }
+        
         instanceManager2.shutDown();
+
+//        instanceManager2.fail();
 
 //        while (true) {}
 

@@ -68,6 +68,7 @@ public class InstanceManager implements ApplicationResources {
             return false;
         }
 
+        System.out.println("Start instanceManager, id: " + instanceManagerId + " successfully");
         return true;
     }
 
@@ -97,15 +98,25 @@ public class InstanceManager implements ApplicationResources {
 
     /**
      *
-     * fail
-     * set a flag on an associative znode
+     * fail - shutdown without closing the connection normally
      *
      */
 
     public boolean fail() {
 
+        // set the flag of the corresponding associative znode
+//        if(!zkCli.setData(instanceManagerShadowPath, INSTANCE_MANAGER_FAIL.getBytes())) {
+//            System.out.println("InstanceManager " + instanceManagerId + " shutdown error. Reason: fail to set the flag.");
+//            return false;
+//        }
 
+        // close connection
+        if(!zkCli.closeConnection()) {
+            System.out.println("Close connection error, session ID: " + zkCli.getSessionId());
+            return false;
+        }
 
+        System.out.println("Fail instanceManager, id: " + instanceManagerId + " successfully");
         return true;
     }
 
