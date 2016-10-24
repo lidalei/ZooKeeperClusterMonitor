@@ -4,6 +4,7 @@
 
 import smartzkclient.InstanceManager;
 import smartzkclient.Monitor;
+import smartzkclient.Orchestrator;
 
 public class TestMonitor {
 
@@ -18,40 +19,45 @@ public class TestMonitor {
         monitor.setWatchOnOrchestrator();
 
 
-        InstanceManager instanceManager1 = new InstanceManager(zkHost, "im1");
-        instanceManager1.start();
-
         try{
+            Orchestrator orchestrator1 = new Orchestrator(zkHost, "orch1");
+            orchestrator1.start();
+
             Thread.sleep(1000);
+
+            Orchestrator orchestrator2 = new Orchestrator(zkHost, "orch2");
+            orchestrator2.start();
+
+            orchestrator1.shutDown();
+
+            Thread.sleep(1000);
+
+            orchestrator2.fail();
+
+            Thread.sleep(1000);
+
+            InstanceManager instanceManager1 = new InstanceManager(zkHost, "im1");
+            instanceManager1.start();
+
+            Thread.sleep(1000);
+
+            InstanceManager instanceManager2 = new InstanceManager(zkHost, "im2");
+            instanceManager2.start();
+
+            Thread.sleep(1000);
+
+            instanceManager1.fail();
+
+            Thread.sleep(2000);
+
+            instanceManager2.shutDown();
+
+
+            Thread.sleep(2000);
         }
         catch(InterruptedException e) {
             e.printStackTrace();
         }
-
-        InstanceManager instanceManager2 = new InstanceManager(zkHost, "im2");
-        instanceManager2.start();
-
-        try{
-            Thread.sleep(1000);
-        }
-        catch(InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        instanceManager1.fail();
-
-        try{
-            Thread.sleep(1000);
-        }
-        catch(InterruptedException e) {
-            e.printStackTrace();
-        }
-        
-        instanceManager2.shutDown();
-
-//        instanceManager2.fail();
-
-//        while (true) {}
 
     }
 

@@ -18,6 +18,10 @@ public class Monitor implements ApplicationResources {
     private String instanceManagerRootPath = null;
     private String instanceManagerRootShadowPath = null;
 
+    private String orchestratorRootPath = null;
+    private String orchestratorRootShadowPath = null;
+
+
     // when a child event occurs, compare the changed children with the "current" ones
     // to identify the specific change according to the comparison and the status of instanceManagers,
     // finally update the current instanceManagers and the status.
@@ -73,7 +77,7 @@ public class Monitor implements ApplicationResources {
             return false;
         }
 
-        String orchestratorRootPath = zkCli.createZnode(appRooPath + "/" + orchestratorRootZnode, orchestratorRootZnode.getBytes());
+        orchestratorRootPath = zkCli.createZnode(appRooPath + "/" + orchestratorRootZnode, orchestratorRootZnode.getBytes());
         if(orchestratorRootPath  == null) {
             System.out.println("Create " + orchestratorRootZnode + " error");
             return false;
@@ -87,7 +91,7 @@ public class Monitor implements ApplicationResources {
             return false;
         }
 
-        String orchestratorRootShadowPath = zkCli.createZnode(appRooPath + "/" + orchestratorRootShadowZnode, orchestratorRootShadowZnode.getBytes());
+        orchestratorRootShadowPath = zkCli.createZnode(appRooPath + "/" + orchestratorRootShadowZnode, orchestratorRootShadowZnode.getBytes());
         if(orchestratorRootShadowPath  == null) {
             System.out.println("Create " + orchestratorRootShadowZnode + " error");
             return false;
@@ -98,9 +102,6 @@ public class Monitor implements ApplicationResources {
     }
 
     public boolean setWatchOnInstanceManagers() {
-
-        final String instanceManagerRootPath = "/" + appName + "/" + instanceManagerRootZnode;
-
 
         Watcher dataWatch = new Watcher() {
             public void process(WatchedEvent we) {
@@ -115,6 +116,7 @@ public class Monitor implements ApplicationResources {
                 System.out.println("InstanceManager children event - state: " + we.getState() + ", type: "+ we.getType());
                 // get the updated InstanceManagers and re-watch the children change event
                 List<String> updatedInstanceManagers = zkCli.getChildren(instanceManagerRootPath, this, null);
+
                 // An event occurs when a new instanceManager is created or an instanceManager is failed or shut down,
                 // which corresponds to a new child and a deleted child, respectively.
                 // Compare updated children with activeInstanceManagers just after last event occurred
@@ -168,7 +170,6 @@ public class Monitor implements ApplicationResources {
 
                 activeInstanceManagers = updatedInstanceManagers;
                 updatedInstanceManagers = null;
-
             }
         };
 
@@ -204,8 +205,6 @@ public class Monitor implements ApplicationResources {
 
 
     public boolean setWatchOnOrchestrator() {
-        final String orchestratorRootPath = "/" + appName + "/" + orchestratorRootZnode;
-
         Watcher dataWatcher = new Watcher() {
             public void process(WatchedEvent we) {
                 System.out.println("Orchestrator event - state: " + we.getState() + ", type: " + we.getType());
@@ -219,8 +218,63 @@ public class Monitor implements ApplicationResources {
             public void process(WatchedEvent we) {
                 // TODO
                 System.out.println("Orchestrator children event - state: " + we.getState() + ", type: "+ we.getType());
-                // re-watch the children change event
-                zkCli.getChildren(orchestratorRootPath, this, null);
+                // get the updated orchestrator and re-watch the children change event
+                List<String> updatedOrchestrators = zkCli.getChildren(orchestratorRootPath, this, null);
+
+                // An event occurs when a new orchestrator is created or an orchestrator is failed or shut down,
+                // which corresponds to a new child and a deleted child, respectively.
+                // Compare updated children with activeOrchestrators just after last event occurred
+                // diff = updatedOrchestrators - activeOrchestrators
+                if(updatedOrchestrators.size() > activeOrchestrators.size()) { // a new instance is created
+                    for(String orch : updatedOrchestrators) {
+                        boolean isNew = true;
+                        for(String activeOrch: activeOrchestrators) {
+                            if(activeOrch.equals(orch)) {
+                                isNew = false;
+                                break;
+                            }
+                        }
+                        if(isNew) { // the orchestrator is newly created
+                            System.out.println("A new orchestrator was created: " + orch);
+                        }
+                    }
+                }
+                else { // an orchestrator is shutdown or failed
+                    //TODO: distinguish the status of shutdown and fail
+                    for(String activeOrch : activeOrchestrators) {
+                        boolean isAlive = false;
+                        for(String orch: updatedOrchestrators) {
+                            if(orch.equals(activeOrch)) {
+                                isAlive = true;
+                                break;
+                            }
+                        }
+                        if(!isAlive) { // the orchestrator is shutdown or failed
+                            // check the status of the orchestrator znode shadow
+                            byte[] status = zkCli.getData(orchestratorRootShadowPath + "/" + activeOrch, false, null);
+                            if(status == null) {
+                                System.out.println("Fail to the get the status of orchestrator, id: " + activeOrch);
+                            }
+                            else {
+                                try{
+                                    String shutdownOrFail = new String(status, "UTF-8");
+                                    if(!shutdownOrFail.equals(ORCHESTRATOR_SHUTDOWN)) {
+                                        shutdownOrFail = ORCHESTRATOR_FAIL;
+                                    }
+                                    System.out.println("The orchestrator, id: " + activeOrch + " " + shutdownOrFail);
+                                }
+                                catch(UnsupportedEncodingException e) {
+                                    e.printStackTrace();
+                                    System.out.println("Convert the status of orchestrator, id: " + activeOrch + " unsuccessfully!");
+                                }
+                            }
+                        }
+                    }
+                }
+
+                activeOrchestrators= updatedOrchestrators;
+                updatedOrchestrators = null;
+
             }
         };
 

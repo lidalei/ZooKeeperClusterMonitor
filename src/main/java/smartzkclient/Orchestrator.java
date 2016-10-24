@@ -5,21 +5,21 @@ import org.apache.zookeeper.CreateMode;
 /**
  * Created by Sophie on 11/10/2016.
  */
-public class Orchestrator {
+public class Orchestrator implements ApplicationResources {
 
     private ZkClient zkCli = new ZkClient();
     private String zkHost = null;
-    private String orchestratorRootZnode = null;
     private String orchestratorId = null;
+    private String orchestratorPath = null;
+    private String orchestratorShadowPath = null;
 
-    public Orchestrator(String zkHost, String orchestratorRootZnode, String orchestratorId) {
+    public Orchestrator(String zkHost, String orchestratorId) {
         this.zkHost = zkHost;
-        this.orchestratorRootZnode = orchestratorRootZnode;
         this.orchestratorId = orchestratorId;
     }
 
-    public Orchestrator(String orchestratorRootZnode, String orchestratorId) {
-        this("localhost", orchestratorRootZnode, orchestratorId);
+    public Orchestrator(String orchestratorId) {
+        this("localhost", orchestratorId);
     }
 
 
@@ -44,12 +44,12 @@ public class Orchestrator {
 
         // initialize a connection to zookeeper server
         if(!initialize()){
-            System.out.println("Start an instanceManager error due to initialize error.");
+            System.out.println("Start an orchestrator error due to initialize error.");
             return false;
         }
 
         // create an EPHEMERAL znode
-        String orchestratorPath = zkCli.createZnode("/" + orchestratorRootZnode + "/" + orchestratorId,
+        orchestratorPath = zkCli.createZnode("/" + appName + "/" + orchestratorRootZnode + "/" + orchestratorId,
                 orchestratorId.getBytes(), CreateMode.EPHEMERAL);
 
         if(orchestratorPath == null) {
@@ -57,19 +57,59 @@ public class Orchestrator {
             return false;
         }
 
+        // create a shadow persistent znode and set the flag of the corresponding associative znode
+        orchestratorShadowPath = zkCli.createZnode("/" + appName + "/" + orchestratorRootShadowZnode + "/" + orchestratorId,
+                ORCHESTRATOR_STARTING.getBytes(), CreateMode.PERSISTENT);
+
+        if(orchestratorShadowPath == null) {
+            System.out.println("Start the orchestrator shadow error.");
+            return false;
+        }
+
+
+        return true;
+    }
+
+
+    /**
+     * shut down
+     * set a flag on an associative znode and close connection
+     */
+    public boolean shutDown() {
+
+        // set the flag of the corresponding associative znode
+        if(!zkCli.setData(orchestratorShadowPath, ORCHESTRATOR_SHUTDOWN.getBytes())) {
+            System.out.println("orchestrator " + orchestratorId + " shutdown error. Reason: fail to set the flag.");
+            return false;
+        }
+
+        // close connection
+        if(!zkCli.closeConnection()) {
+            System.out.println("Close connection error, session ID: " + zkCli.getSessionId());
+            return false;
+        }
+
+        System.out.println("Shut orchestrator, id: " + orchestratorId + " down successfully");
         return true;
     }
 
 
 
 
+    /**
+     * shut down
+     * set a flag on an associative znode and close connection
+     */
+    public boolean fail() {
 
+        // close connection
+        if(!zkCli.closeConnection()) {
+            System.out.println("Close connection error, session ID: " + zkCli.getSessionId());
+            return false;
+        }
 
-
-
-
-
-
-
+        System.out.println("Fail orchestrator, id: " + orchestratorId + " successfully");
+        return true;
+    }
 
 }
