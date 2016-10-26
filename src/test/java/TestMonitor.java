@@ -32,6 +32,11 @@ public class TestMonitor {
 
             Thread.sleep(1000);
 
+            System.out.println("Active orchestrators: ");
+            for(String orch: monitor.listAllOrchestrators()) {
+                System.out.println(orch);
+            }
+
             orchestrator2.fail();
 
             Thread.sleep(1000);
@@ -46,14 +51,29 @@ public class TestMonitor {
 
             Thread.sleep(1000);
 
+
+            System.out.println("Active instanceMnagers: ");
+            for(String im: monitor.listAllInstanceManagers()) {
+                System.out.println(im);
+            }
+
             instanceManager1.fail();
 
             Thread.sleep(2000);
 
             instanceManager2.shutDown();
 
+            Thread.sleep(2000);
+
+            InstanceManager instanceManager3 = new InstanceManager(zkHost, "im3");
+            instanceManager3.start();
 
             Thread.sleep(2000);
+
+            instanceManager3.fail();
+
+            Thread.sleep(2000);
+
         }
         catch(InterruptedException e) {
             e.printStackTrace();

@@ -208,7 +208,7 @@ public class ZkClient {
         }
 
         try {
-            return zk.getChildren(path, watch);
+            return zk.getChildren(path, watch, state);
         }
         catch(InterruptedException e) {
             e.printStackTrace();
@@ -268,37 +268,6 @@ public class ZkClient {
 
     }
 
-
-    /*
-    List all instance manager.
-    @param rootPath.
-     */
-
-    public List<String> listAllInstanceManagers(String rootPath) {
-        if(znodeExists(rootPath) == null) {
-            return null;
-        }
-
-        try {
-            return zk.getChildren(rootPath, false);
-        }
-        catch(InterruptedException e) {
-            e.printStackTrace();
-        }
-        catch(KeeperException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /*
-    List all instance managers where the subquery belonging to query is deployed.
-     */
-    public List<String> listAllInstanceManagersWithQuery(String queryRootPath) {
-        //TODO
-
-        return null;
-    }
 
     /*
     The function to store cluster information in zookeeper.

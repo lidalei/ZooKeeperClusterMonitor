@@ -1,6 +1,7 @@
 package smartzkclient;
 
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 
@@ -322,5 +323,19 @@ public class Monitor implements ApplicationResources {
 
     public String getZkHost() { return this.zkHost; }
 
+
+    /**
+     * List all instanceManagers.
+     */
+    public List<String> listAllInstanceManagers() {
+        return zkCli.getChildren(instanceManagerRootPath, false);
+    }
+
+    /**
+     * List all orchestrators.
+     */
+    public List<String> listAllOrchestrators() {
+        return zkCli.getChildren(orchestratorRootPath, false);
+    }
 
 }
