@@ -1,10 +1,7 @@
+package tutorial;
+
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.Watcher.Event.KeeperState;
-
-import java.io.IOException;
 
 public class ZKSetData {
     private static ZooKeeper zk;

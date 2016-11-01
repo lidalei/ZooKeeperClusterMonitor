@@ -10,6 +10,7 @@ public interface ApplicationResources {
     String orchestratorRootZnode = "orchestratorRoot";
     String instanceManagerRootShadowZnode = "instanceManagerRootShadow";
     String orchestratorRootShadowZnode = "orchestratorRootShadow";
+
     String INSTANCE_MANAGER_STARTING = "imStarting";
     String INSTANCE_MANAGER_SHUTDOWN = "imShutdown";
     String INSTANCE_MANAGER_FAIL = "imFail";

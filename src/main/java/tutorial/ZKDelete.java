@@ -1,3 +1,5 @@
+package tutorial;
+
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.KeeperException;
 
