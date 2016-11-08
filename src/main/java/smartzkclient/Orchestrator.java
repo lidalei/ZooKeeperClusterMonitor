@@ -48,15 +48,6 @@ public class Orchestrator implements ApplicationResources {
             return false;
         }
 
-        // create an EPHEMERAL znode
-        orchestratorPath = zkCli.createZnode("/" + appName + "/" + orchestratorRootZnode + "/" + orchestratorId,
-                orchestratorId.getBytes(), CreateMode.EPHEMERAL);
-
-        if(orchestratorPath == null) {
-            System.out.println("Start an orchestrator error.");
-            return false;
-        }
-
         // create a shadow persistent znode and set the flag of the corresponding associative znode
         orchestratorShadowPath = zkCli.createZnode("/" + appName + "/" + orchestratorRootShadowZnode + "/" + orchestratorId,
                 ORCHESTRATOR_STARTING.getBytes(), CreateMode.PERSISTENT);
@@ -66,6 +57,14 @@ public class Orchestrator implements ApplicationResources {
             return false;
         }
 
+        // create an EPHEMERAL znode
+        orchestratorPath = zkCli.createZnode("/" + appName + "/" + orchestratorRootZnode + "/" + orchestratorId,
+                orchestratorId.getBytes(), CreateMode.EPHEMERAL);
+
+        if(orchestratorPath == null) {
+            System.out.println("Start an orchestrator error.");
+            return false;
+        }
 
         return true;
     }

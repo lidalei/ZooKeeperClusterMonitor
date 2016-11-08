@@ -51,20 +51,20 @@ public class InstanceManager implements ApplicationResources {
             return false;
         }
 
+        // create a shadow persistent znode and set the flag of the corresponding associative znode
+        instanceManagerShadowPath = zkCli.createZnode("/" + appName + "/" + instanceManagerRootShadowZnode + "/" + instanceManagerId,
+                INSTANCE_MANAGER_STARTING.getBytes(), CreateMode.PERSISTENT);
+        if(instanceManagerShadowPath == null) {
+            System.out.println("Start the instanceManager shadow error.");
+            return false;
+        }
+
         // create an EPHEMERAL znode
         instanceManagerPath = zkCli.createZnode("/" + appName + "/" + instanceManagerRootZnode + "/" + instanceManagerId,
                 instanceManagerId.getBytes(), CreateMode.EPHEMERAL);
 
         if(instanceManagerPath == null) {
             System.out.println("Start an instanceManager error.");
-            return false;
-        }
-
-        // create a shadow persistent znode and set the flag of the corresponding associative znode
-        instanceManagerShadowPath = zkCli.createZnode("/" + appName + "/" + instanceManagerRootShadowZnode + "/" + instanceManagerId,
-                INSTANCE_MANAGER_STARTING.getBytes(), CreateMode.PERSISTENT);
-        if(instanceManagerShadowPath == null) {
-            System.out.println("Start the instanceManager shadow error.");
             return false;
         }
 

@@ -1,7 +1,6 @@
 package smartzkclient;
 
 import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 
@@ -267,7 +266,7 @@ public class Monitor implements ApplicationResources {
                                         shutdownOrFail = ORCHESTRATOR_FAIL;
                                         // set the status
                                         if(!zkCli.setData(orchestratorRootShadowPath + "/" + activeOrch, shutdownOrFail.getBytes())) {
-                                            System.out.println("Update the status of orchestrator, id: " + activeOrch + "error.");
+                                            System.out.println("Update the status of orchestrator, id: " + activeOrch + " error.");
                                         }
                                     }
                                     System.out.println("The orchestrator, id: " + activeOrch + " " + shutdownOrFail);
