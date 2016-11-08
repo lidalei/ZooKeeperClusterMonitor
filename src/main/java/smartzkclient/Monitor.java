@@ -157,6 +157,10 @@ public class Monitor implements ApplicationResources {
                                     String shutdownOrFail = new String(status, "UTF-8");
                                     if(!shutdownOrFail.equals(INSTANCE_MANAGER_SHUTDOWN)) {
                                         shutdownOrFail = INSTANCE_MANAGER_FAIL;
+                                        // set the status
+                                        if(!zkCli.setData(instanceManagerRootShadowPath + "/" + activeIm, shutdownOrFail.getBytes())) {
+                                            System.out.println("Update the status of instanceManager, id: " + activeIm + "error.");
+                                        }
                                     }
                                     System.out.println("The instanceManager, id: " + activeIm + " " + shutdownOrFail);
                                 }
@@ -261,6 +265,10 @@ public class Monitor implements ApplicationResources {
                                     String shutdownOrFail = new String(status, "UTF-8");
                                     if(!shutdownOrFail.equals(ORCHESTRATOR_SHUTDOWN)) {
                                         shutdownOrFail = ORCHESTRATOR_FAIL;
+                                        // set the status
+                                        if(!zkCli.setData(orchestratorRootShadowPath + "/" + activeOrch, shutdownOrFail.getBytes())) {
+                                            System.out.println("Update the status of orchestrator, id: " + activeOrch + "error.");
+                                        }
                                     }
                                     System.out.println("The orchestrator, id: " + activeOrch + " " + shutdownOrFail);
                                 }
