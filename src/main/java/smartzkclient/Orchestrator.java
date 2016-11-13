@@ -8,18 +8,22 @@ import org.apache.zookeeper.CreateMode;
 public class Orchestrator implements ApplicationResources {
 
     private ZkClient zkCli = new ZkClient();
-    private String zkHost = null;
+//    private String zkHost = null;
     private String orchestratorId = null;
     private String orchestratorPath = null;
+    private static int autoOrchestratorId = 0;
     private String orchestratorShadowPath = null;
 
-    public Orchestrator(String zkHost, String orchestratorId) {
-        this.zkHost = zkHost;
+    public Orchestrator(String orchestratorId) {
         this.orchestratorId = orchestratorId;
     }
 
-    public Orchestrator(String orchestratorId) {
-        this("localhost", orchestratorId);
+    /**
+     * auto-assign orchestrator id
+     */
+    public Orchestrator() {
+        this("Orchestrator" + Integer.toString(autoOrchestratorId));
+        autoOrchestratorId ++;
     }
 
 

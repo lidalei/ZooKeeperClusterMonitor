@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class Monitor implements ApplicationResources {
 
-    private String zkHost = null;
+//    private String zkHost = null;
     private ZkClient zkCli = null;
 
     private String instanceManagerRootPath = null;
@@ -28,18 +28,14 @@ public class Monitor implements ApplicationResources {
     private List<String> activeInstanceManagers = null;
     private List<String> activeOrchestrators = null;
 
-    public Monitor(String zkHost, ZkClient zkCli){
-        this.zkHost = zkHost;
+    public Monitor(ZkClient zkCli){
         this.zkCli = zkCli;
     }
 
-    public Monitor(String zkHost) {
-        this(zkHost, new ZkClient());
+    public Monitor() {
+        this(new ZkClient());
     }
 
-    public Monitor() {
-        this("localhost");
-    }
 
     /**
      * To monitor the cluster of instanceManager and Orchestrator, it should establishes a connection to Zookeeper
@@ -326,7 +322,7 @@ public class Monitor implements ApplicationResources {
         return true;
     }
 
-    public void setZkHost(String zkHost) { this.zkHost = zkHost; }
+//    public void setZkHost(String zkHost) { this.zkHost = zkHost; }
 
     public String getZkHost() { return this.zkHost; }
 

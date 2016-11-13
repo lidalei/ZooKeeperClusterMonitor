@@ -10,8 +10,8 @@ public class TestMonitor {
 
     public static void main(String[] args) {
 
-        String zkHost = "localhost:2181/Assignment1";
-        Monitor monitor = new Monitor(zkHost);
+//        String zkHost = "localhost:2181/Assignment1";
+        Monitor monitor = new Monitor();
         monitor.startApp();
 
         monitor.setWatchOnInstanceManagers();
@@ -20,12 +20,12 @@ public class TestMonitor {
 
 
         try{
-            Orchestrator orchestrator1 = new Orchestrator(zkHost, "orch1");
+            Orchestrator orchestrator1 = new Orchestrator();
             orchestrator1.start();
 
             Thread.sleep(1000);
 
-            Orchestrator orchestrator2 = new Orchestrator(zkHost, "orch2");
+            Orchestrator orchestrator2 = new Orchestrator();
             orchestrator2.start();
 
             orchestrator1.shutDown();
@@ -41,12 +41,12 @@ public class TestMonitor {
 
             Thread.sleep(1000);
 
-            InstanceManager instanceManager1 = new InstanceManager(zkHost, "im1");
+            InstanceManager instanceManager1 = new InstanceManager();
             instanceManager1.start();
 
             Thread.sleep(1000);
 
-            InstanceManager instanceManager2 = new InstanceManager(zkHost, "im2");
+            InstanceManager instanceManager2 = new InstanceManager();
             instanceManager2.start();
 
             Thread.sleep(1000);
@@ -65,7 +65,7 @@ public class TestMonitor {
 
             Thread.sleep(2000);
 
-            InstanceManager instanceManager3 = new InstanceManager(zkHost, "im3");
+            InstanceManager instanceManager3 = new InstanceManager();
             instanceManager3.start();
 
             Thread.sleep(2000);

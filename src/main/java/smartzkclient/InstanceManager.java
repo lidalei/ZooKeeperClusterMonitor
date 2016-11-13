@@ -10,19 +10,22 @@ import org.apache.zookeeper.CreateMode;
 public class InstanceManager implements ApplicationResources {
 
     private ZkClient zkCli = new ZkClient();
-    private String zkHost = null;
+//    private String zkHost = null;
     private String instanceManagerId = null;
-
+    private static int autoInstanceManagerId = 0;
     private String instanceManagerPath = null;
     private String instanceManagerShadowPath = null;
 
-    public InstanceManager(String zkHost, String instanceManagerId) {
-        this.zkHost = zkHost;
+    public InstanceManager(String instanceManagerId) {
         this.instanceManagerId = instanceManagerId;
     }
 
-    public InstanceManager(String instanceManagerId) {
-        this("localhost", instanceManagerId);
+    /**
+     * auto-assign instanceManager id
+     */
+    public InstanceManager() {
+        this("InstanceManager" + Integer.toString(autoInstanceManagerId));
+        autoInstanceManagerId ++;
     }
 
 
