@@ -36,7 +36,7 @@ public class ZkClient {
     public boolean connect(String host) {
 
         // default as localhost
-        if(host == "" || host == null) host = "localhost";
+        if(host.equals("") || host == null) host = "localhost:2181";
 
         try{
             zk = new ZooKeeper(host, 5000, new Watcher() {
@@ -107,6 +107,40 @@ public class ZkClient {
         return null;
     }
 
+    /**
+     * Delete znode
+     */
+
+    public boolean removeZnode(String znodePath) {
+        try{
+            zk.delete(znodePath, znodeExists(znodePath).getVersion());
+            return true;
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        catch (KeeperException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Remove recursively znode
+     */
+
+    public boolean removeZnodeRecursively(String znodePath) {
+        try{
+            ZKUtil.deleteRecursive(zk, znodePath);
+            return true;
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 
     /**
      * get session id
