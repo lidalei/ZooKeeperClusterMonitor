@@ -7,26 +7,37 @@ import jmeter.writes.RemoveQueryAbstract;
 import smartzkclient.ZkClient;
 import zoo.reader.BenchmarkConstants;
 
+
 public class RemoveQueryImpl extends RemoveQueryAbstract {
 	private static final long serialVersionUID = 1L;
+	ZkClient zkCli = null;
 
 	@Override
 	public SampleResult runTest(JavaSamplerContext context) {
 		SampleResult results = new SampleResult();
-		String queryName = this.getAndRemoveQueryId();
 		String zkURL = this.getZkURL(context);
 
 		// Connect to zk
-		ZkClient zkCli = new ZkClient();
-        System.out.println("Connect to zookeeper server" + zkCli.connect(zkURL));
+		if(zkCli == null) {
+			zkCli = new ZkClient();
+			zkCli.connect(zkURL);
+		}
+
+        String queryName = this.getAndRemoveQueryId();
+
+		if(queryName == null) {
+		    return new SampleResult();
+        }
 
 		results.sampleStart();
 
 		// TODO implement remove query
-		zkCli.removeZnodeRecursively(BenchmarkConstants.Benchmark_Root_Znode + "/" + queryName);
+		if(!zkCli.removeZnodeRecursively(BenchmarkConstants.Benchmark_Root_Znode + "/" + queryName)) {
+		    return new SampleResult();
+        }
 
 		results.sampleEnd();
-		results.setResponseCodeOK();
+		results.setSuccessful(true);
 		return results;
 	}
 

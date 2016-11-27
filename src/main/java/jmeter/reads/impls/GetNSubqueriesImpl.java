@@ -10,9 +10,11 @@ import zoo.reader.BenchmarkConstants;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class GetNSubqueriesImpl extends GetQueryAbstract {
 	private static final long serialVersionUID = 1L;
+    ZkClient zkCli = null;
 
 	@Override
 	public SampleResult runTest(JavaSamplerContext context) {
@@ -20,19 +22,43 @@ public class GetNSubqueriesImpl extends GetQueryAbstract {
 		String zkURL = this.getZkURL(context);
 
 		// connect to zk
-		ZkClient zkCli = new ZkClient();
-		zkCli.connect(zkURL);
+        if(zkCli == null) {
+            zkCli = new ZkClient();
+            zkCli.connect(zkURL);
+        }
 
-		String queryName = this.getQueryName();
+        String queryName = null;
+
+		try{
+		    queryName = this.getQueryName();
+        }
+        catch (NoSuchElementException e) {
+		    return new SampleResult();
+        }
+
+        String queryZnode = BenchmarkConstants.Benchmark_Root_Znode + "/" + queryName;
 		
 		results.sampleStart();
 
 		// TODO implement
-        String queryZnode = BenchmarkConstants.Benchmark_Root_Znode + "/" + queryName;
+        // get query description data
+        byte[] queryData = zkCli.getData(queryZnode, false, null);
+        if(queryData == null) {
+            return new SampleResult();
+        }
+        // get children
 		List<String> children = zkCli.getChildren(queryZnode, false);
-        HashMap<String, Integer> subqueries = new HashMap<>(children.size());
+		if(children == null) {
+			return new SampleResult();
+		}
+		// get children data
+        HashMap<String, Integer> subqueries = new HashMap<>(children.size()*4/3);
         for(String subqueryName: children) {
             byte[] data = zkCli.getData(queryZnode + "/" + subqueryName, false, null);
+			if(data == null) {
+				return new SampleResult();
+			}
+
             try{
                 subqueries.put(subqueryName, Integer.getInteger(new String(data, "UTF-8")));
             } catch (UnsupportedEncodingException e) {
@@ -41,7 +67,7 @@ public class GetNSubqueriesImpl extends GetQueryAbstract {
         }
 
 		results.sampleEnd();
-		results.setResponseCodeOK();
+		results.setSuccessful(true);
 
 		return results;
 	}

@@ -7,8 +7,11 @@ import jmeter.reads.GetQueryAbstract;
 import smartzkclient.ZkClient;
 import zoo.reader.BenchmarkConstants;
 
+import java.util.NoSuchElementException;
+
 public class GetQueryDataImpl extends GetQueryAbstract {
 	private static final long serialVersionUID = 1L;
+	ZkClient zkCli = null;
 
 	@Override
 	public SampleResult runTest(JavaSamplerContext context) {
@@ -16,18 +19,30 @@ public class GetQueryDataImpl extends GetQueryAbstract {
 		String zkURL = this.getZkURL(context);
 
 		// connect to zk
-		ZkClient zkCli = new ZkClient();
-		zkCli.connect(zkURL);
+		if(zkCli == null) {
+			zkCli = new ZkClient();
+			zkCli.connect(zkURL);
+		}
 
-		String queryName = this.getQueryName();
+        String queryName = null;
+
+		try{
+            queryName = this.getQueryName();
+        }
+        catch(NoSuchElementException e) {
+		    return new SampleResult();
+        }
+
 		
 		results.sampleStart();
 
 		// TODO implement
-		zkCli.getData(BenchmarkConstants.Benchmark_Root_Znode + "/" + queryName, false, null);
+		if(zkCli.getData(BenchmarkConstants.Benchmark_Root_Znode + "/" + queryName, false, null) == null) {
+		    return new SampleResult();
+        }
 
 		results.sampleEnd();
-		results.setResponseCodeOK();
+        results.setSuccessful(true);
 
 		return results;
 	}

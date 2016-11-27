@@ -29,5 +29,9 @@ public abstract class RemoveQueryAbstract extends AbstractJavaSamplerClient impl
 	}
 	
 	public abstract SampleResult runTest(JavaSamplerContext context);
+//	@Override
+//	public abstract void setupTest(JavaSamplerContext context);
+//	@Override
+//	public abstract void teardownTest(JavaSamplerContext context);
 
 }
