@@ -107,6 +107,25 @@ public class ZkClient {
         return null;
     }
 
+
+    /**
+     * Method to create znode in zookeeper ensemble without check its existence.
+     * If created successfully, return the true path of the created znode, else if exists, set the data only,
+     * Else, return null.
+     */
+    public String createZnodeWithoutCheckExistence(String path, byte[] data, CreateMode createMode){
+        try{
+            return zk.create(path, data, ZooDefs.Ids.OPEN_ACL_UNSAFE, createMode);
+        }
+        catch(KeeperException e) {
+            e.printStackTrace();
+        }
+        catch(InterruptedException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     /**
      * Delete znode
      */

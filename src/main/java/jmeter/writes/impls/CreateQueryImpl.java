@@ -34,14 +34,14 @@ public class CreateQueryImpl extends CreateQueryAbstract {
 		results.sampleStart();
 
 		// TODO implement query creation
-        String queryZnode = zkCli.createZnode(BenchmarkConstants.Benchmark_Root_Znode + "/" + query.getName(), jsonString.getBytes(), CreateMode.PERSISTENT);
+        String queryZnode = zkCli.createZnodeWithoutCheckExistence(BenchmarkConstants.Benchmark_Root_Znode + "/" + query.getName(), jsonString.getBytes(), CreateMode.PERSISTENT);
         if(queryZnode == null) {
-            return new SampleResult();
-        }
+			return new SampleResult();
+		}
         for(QueryDeployment subquery: query.getSubQueryDeployment()) {
             String subqueryName = subquery.getName();
             int numberOfInstanceManagers = subquery.getNumberOfInstances();
-            String path = zkCli.createZnode(queryZnode + "/" + subqueryName, Integer.toString(numberOfInstanceManagers).getBytes(), CreateMode.PERSISTENT);
+            String path = zkCli.createZnodeWithoutCheckExistence(queryZnode + "/" + subqueryName, Integer.toString(numberOfInstanceManagers).getBytes(), CreateMode.PERSISTENT);
             if(path == null) {
                 return new SampleResult();
             }
