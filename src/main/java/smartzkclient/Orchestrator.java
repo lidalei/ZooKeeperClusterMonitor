@@ -1,6 +1,10 @@
 package smartzkclient;
 
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+
+import java.io.UnsupportedEncodingException;
 
 /**
  * Created by Sophie on 11/10/2016.
@@ -69,6 +73,38 @@ public class Orchestrator implements ApplicationResources {
             System.out.println("Start an orchestrator error.");
             return false;
         }
+
+
+        // put a data change watcher on the persistent znode
+        byte[] data = zkCli.getData(orchestratorShadowPath, new Watcher() {
+            @Override
+            public void process(WatchedEvent watchedEvent) {
+                byte[] orchStatus = zkCli.getData(orchestratorShadowPath, false, null);
+                if(orchStatus == null) {
+                    System.out.println("Get orchestrator, id: " + orchestratorId + " data error.");
+                    return;
+                }
+                try {
+                    String status = new String(orchStatus, "UTF-8");
+                    if(!status.equals(ApplicationResources.ORCHESTRATOR_STARTING_ACK)) {
+                        System.out.println("orchestrator, id: " + orchestratorId + " did not receive response from monitor.");
+                    }
+                    else {
+                        System.out.println("orchestrator, id: " + orchestratorId + " received response from monitor.");
+                    }
+                }
+                catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                    System.out.println("Get orchestrator, id" + orchestratorId + " data error.");
+                }
+            }
+        }, null);
+
+        if(data == null) {
+            System.out.println("Put data change watcher on orchestrator, id" + orchestratorId + " error.");
+        }
+
+        System.out.println("Start orchestrator, id: " + orchestratorId + " successfully");
 
         return true;
     }

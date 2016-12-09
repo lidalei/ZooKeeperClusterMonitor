@@ -127,7 +127,15 @@ public class Monitor implements ApplicationResources {
                             }
                         }
                         if(isNew) { // the instanceManager is newly created
-                            System.out.println("A new instanceManager was created: " + im);
+                            String imLog = "A new instanceManager was created: " + im;
+                            // set the shadow znode data as imStartingAck
+                            if(!zkCli.setData(instanceManagerRootShadowPath + "/" + im, ApplicationResources.INSTANCE_MANAGER_STARTING_ACK.getBytes())) {
+                                imLog += ". But ack sent error.";
+                            }
+                            else {
+                                imLog += ". And ack sent successfully.";
+                            }
+                            System.out.println(imLog);
                         }
                     }
                 }
@@ -235,8 +243,17 @@ public class Monitor implements ApplicationResources {
                             }
                         }
                         if(isNew) { // the orchestrator is newly created
-                            System.out.println("A new orchestrator was created: " + orch);
+                            String orchLog = "A new orchestrator was created: " + orch;
+                            // set the shadow znode data as imStartingAck
+                            if(!zkCli.setData(orchestratorRootShadowPath + "/" + orch, ApplicationResources.ORCHESTRATOR_STARTING_ACK.getBytes())) {
+                                orchLog += ". But ack sent error.";
+                            }
+                            else {
+                                orchLog += ". And ack sent successfully.";
+                            }
+                            System.out.println(orchLog);
                         }
+
                     }
                 }
                 else { // an orchestrator is shutdown or failed

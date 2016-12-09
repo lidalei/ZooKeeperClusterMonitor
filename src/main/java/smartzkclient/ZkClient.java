@@ -39,7 +39,7 @@ public class ZkClient {
         if(host.equals("") || host == null) host = "localhost:2181";
 
         try{
-            zk = new ZooKeeper(host, Integer.MAX_VALUE, new Watcher() {
+            zk = new ZooKeeper(host, 30000, new Watcher() {
                 public void process(WatchedEvent we) {
                     if (we.getState() == Event.KeeperState.SyncConnected) {
                         connectedSignal.countDown();
