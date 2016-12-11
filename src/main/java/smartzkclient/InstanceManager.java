@@ -5,6 +5,7 @@ import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Created by Sophie on 11/10/2016.
@@ -85,18 +86,13 @@ public class InstanceManager implements ApplicationResources {
                     System.out.println("Get instanceManager, id: " + instanceManagerId + " data error.");
                     return;
                 }
-                try {
-                    String status = new String(imStatus, "UTF-8");
-                    if(!status.equals(ApplicationResources.INSTANCE_MANAGER_STARTING_ACK)) {
-                        System.out.println("instanceManager, id: " + instanceManagerId + " did not receive response from monitor.");
-                    }
-                    else {
-                        System.out.println("instanceManager, id: " + instanceManagerId + " received response from monitor.");
-                    }
+
+                String status = new String(imStatus, StandardCharsets.UTF_8);
+                if(!status.equals(ApplicationResources.INSTANCE_MANAGER_STARTING_ACK)) {
+                    System.out.println("instanceManager, id: " + instanceManagerId + " did not receive response from monitor.");
                 }
-                catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                    System.out.println("Get instanceManager, id" + instanceManagerId + " data error.");
+                else {
+                    System.out.println("instanceManager, id: " + instanceManagerId + " received response from monitor.");
                 }
             }
         }, null);

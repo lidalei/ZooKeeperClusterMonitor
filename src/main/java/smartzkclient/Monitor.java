@@ -5,6 +5,7 @@ import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -156,21 +157,15 @@ public class Monitor implements ApplicationResources {
                                 System.out.println("Fail to the get the status of instanceManager, id: " + activeIm);
                             }
                             else {
-                                try{
-                                    String shutdownOrFail = new String(status, "UTF-8");
-                                    if(!shutdownOrFail.equals(INSTANCE_MANAGER_SHUTDOWN)) {
-                                        shutdownOrFail = INSTANCE_MANAGER_FAIL;
-                                        // set the status
-                                        if(!zkCli.setData(instanceManagerRootShadowPath + "/" + activeIm, shutdownOrFail.getBytes())) {
-                                            System.out.println("Update the status of instanceManager, id: " + activeIm + "error.");
-                                        }
+                                String shutdownOrFail = new String(status, StandardCharsets.UTF_8);
+                                if(!shutdownOrFail.equals(INSTANCE_MANAGER_SHUTDOWN)) {
+                                    shutdownOrFail = INSTANCE_MANAGER_FAIL;
+                                    // set the status
+                                    if(!zkCli.setData(instanceManagerRootShadowPath + "/" + activeIm, shutdownOrFail.getBytes())) {
+                                        System.out.println("Update the status of instanceManager, id: " + activeIm + "error.");
                                     }
-                                    System.out.println("The instanceManager, id: " + activeIm + " " + shutdownOrFail);
                                 }
-                                catch(UnsupportedEncodingException e) {
-                                    e.printStackTrace();
-                                    System.out.println("Convert the status of instanceManager, id: " + activeIm + " unsuccessfully!");
-                                }
+                                System.out.println("The instanceManager, id: " + activeIm + " " + shutdownOrFail);
                             }
                         }
                     }
@@ -194,19 +189,12 @@ public class Monitor implements ApplicationResources {
             return false;
         }
         else {
-                try{
-                    System.out.println(instanceManagerRootZnode + " data is " + new String(data, "UTF-8"));
-                    System.out.println(instanceManagerRootZnode + " children are " + children.toString());
+            System.out.println(instanceManagerRootZnode + " data is " + new String(data, StandardCharsets.UTF_8));
+            System.out.println(instanceManagerRootZnode + " children are " + children.toString());
 
-                    // initialize activeInstanceManagers with the existing children when starting the Monitor
-                    activeInstanceManagers = children;
-                }
-                catch(UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                    System.out.println("Unsupported when converting byte[] to String. While getting data of " + instanceManagerRootPath);
-                    return false;
-                }
-            }
+            // initialize activeInstanceManagers with the existing children when starting the Monitor
+            activeInstanceManagers = children;
+        }
 
         return true;
     }
@@ -273,21 +261,15 @@ public class Monitor implements ApplicationResources {
                                 System.out.println("Fail to the get the status of orchestrator, id: " + activeOrch);
                             }
                             else {
-                                try{
-                                    String shutdownOrFail = new String(status, "UTF-8");
-                                    if(!shutdownOrFail.equals(ORCHESTRATOR_SHUTDOWN)) {
-                                        shutdownOrFail = ORCHESTRATOR_FAIL;
-                                        // set the status
-                                        if(!zkCli.setData(orchestratorRootShadowPath + "/" + activeOrch, shutdownOrFail.getBytes())) {
-                                            System.out.println("Update the status of orchestrator, id: " + activeOrch + " error.");
-                                        }
+                                String shutdownOrFail = new String(status, StandardCharsets.UTF_8);
+                                if(!shutdownOrFail.equals(ORCHESTRATOR_SHUTDOWN)) {
+                                    shutdownOrFail = ORCHESTRATOR_FAIL;
+                                    // set the status
+                                    if(!zkCli.setData(orchestratorRootShadowPath + "/" + activeOrch, shutdownOrFail.getBytes())) {
+                                        System.out.println("Update the status of orchestrator, id: " + activeOrch + " error.");
                                     }
-                                    System.out.println("The orchestrator, id: " + activeOrch + " " + shutdownOrFail);
                                 }
-                                catch(UnsupportedEncodingException e) {
-                                    e.printStackTrace();
-                                    System.out.println("Convert the status of orchestrator, id: " + activeOrch + " unsuccessfully!");
-                                }
+                                System.out.println("The orchestrator, id: " + activeOrch + " " + shutdownOrFail);
                             }
                         }
                     }
@@ -312,18 +294,11 @@ public class Monitor implements ApplicationResources {
             return false;
         }
         else {
-            try{
-                System.out.println(orchestratorRootZnode + " data is " + new String(data, "UTF-8"));
-                System.out.println(orchestratorRootZnode + " children are " + children.toString());
+            System.out.println(orchestratorRootZnode + " data is " + new String(data, StandardCharsets.UTF_8));
+            System.out.println(orchestratorRootZnode + " children are " + children.toString());
 
-                // initialize activeOrchestrators with the existing children when starting the Monitor
-                activeOrchestrators = children;
-            }
-            catch(UnsupportedEncodingException e) {
-                e.printStackTrace();
-                System.out.println("Unsupported when converting byte[] to String. While getting data of " + orchestratorRootPath);
-                return false;
-            }
+            // initialize activeOrchestrators with the existing children when starting the Monitor
+            activeOrchestrators = children;
         }
 
         return true;

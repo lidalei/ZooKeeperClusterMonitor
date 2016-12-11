@@ -5,6 +5,7 @@ import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Created by Sophie on 11/10/2016.
@@ -84,18 +85,12 @@ public class Orchestrator implements ApplicationResources {
                     System.out.println("Get orchestrator, id: " + orchestratorId + " data error.");
                     return;
                 }
-                try {
-                    String status = new String(orchStatus, "UTF-8");
-                    if(!status.equals(ApplicationResources.ORCHESTRATOR_STARTING_ACK)) {
-                        System.out.println("orchestrator, id: " + orchestratorId + " did not receive response from monitor.");
-                    }
-                    else {
-                        System.out.println("orchestrator, id: " + orchestratorId + " received response from monitor.");
-                    }
+                String status = new String(orchStatus, StandardCharsets.UTF_8);
+                if(!status.equals(ApplicationResources.ORCHESTRATOR_STARTING_ACK)) {
+                    System.out.println("orchestrator, id: " + orchestratorId + " did not receive response from monitor.");
                 }
-                catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                    System.out.println("Get orchestrator, id" + orchestratorId + " data error.");
+                else {
+                    System.out.println("orchestrator, id: " + orchestratorId + " received response from monitor.");
                 }
             }
         }, null);
