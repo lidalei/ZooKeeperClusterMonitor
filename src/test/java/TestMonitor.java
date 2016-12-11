@@ -3,20 +3,11 @@
  */
 
 import smartzkclient.InstanceManager;
-import smartzkclient.Monitor;
 import smartzkclient.Orchestrator;
 
 public class TestMonitor {
 
     public static void main(String[] args) {
-
-//        String zkHost = "localhost:2181/Assignment1";
-        Monitor monitor = new Monitor();
-        monitor.startApp();
-
-        monitor.setWatchOnInstanceManagers();
-
-        monitor.setWatchOnOrchestrator();
 
 
         try{
@@ -32,11 +23,6 @@ public class TestMonitor {
 
             Thread.sleep(1000);
 
-            System.out.println("Active orchestrators: ");
-            for(String orch: monitor.listAllOrchestrators()) {
-                System.out.println(orch);
-            }
-
             orchestrator2.fail();
 
             Thread.sleep(1000);
@@ -50,12 +36,6 @@ public class TestMonitor {
             instanceManager2.start();
 
             Thread.sleep(1000);
-
-
-            System.out.println("Active instanceMnagers: ");
-            for(String im: monitor.listAllInstanceManagers()) {
-                System.out.println(im);
-            }
 
             instanceManager1.fail();
 
