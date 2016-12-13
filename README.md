@@ -1,2 +1,2 @@
-# Zookeeper-Learn
-Backup the projects performed while learning Zookeeper
+# ZooKeeper Cluster Monitor
+This project is to implement a cluster monitor with the help of ZooKeeper.
