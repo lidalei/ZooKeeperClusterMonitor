@@ -5,7 +5,7 @@ package smartzkclient;
  * This interface contains all agreements between Monitor, InstanceManager and Orchestrator.
  */
 public interface ApplicationResources {
-    String zkHost = "localhost:2181/Assignment1";
+    String zkHost = "localhost:2181";
     String appName = "SystemProjectOne";
     String instanceManagerRootZnode = "instanceManagerRoot";
     String orchestratorRootZnode = "orchestratorRoot";
